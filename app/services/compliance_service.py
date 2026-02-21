@@ -6,23 +6,32 @@ class ComplianceService:
 
     @staticmethod
     def check_student_compliance(db, student: Student):
-        alerts = []
 
-        # Attendance rule
-        if student.attendance is not None and student.attendance < 75:
-            alerts.append("Attendance below 75%")
+        alerts_to_check = [
+            {
+                "condition": student.attendance is not None and student.attendance < 75,
+                "message": "Attendance below 75%"
+            },
+            {
+                "condition": student.cgpa is not None and student.cgpa < 5,
+                "message": "CGPA below 5"
+            }
+        ]
 
-        # GPA rule
-        if student.cgpa is not None and student.cgpa < 5:
-            alerts.append("CGPA below 5")
+        for rule in alerts_to_check:
+            if rule["condition"]:
 
-        for alert in alerts:
-            log = ComplianceLog(
-                user_id=student.user_id,
-                message=alert
-            )
-            db.add(log)
+                existing = db.query(ComplianceLog).filter(
+                    ComplianceLog.user_id == student.user_id,
+                    ComplianceLog.message == rule["message"],
+                    ComplianceLog.resolved == False
+                ).first()
+
+                if not existing:
+                    log = ComplianceLog(
+                        user_id=student.user_id,
+                        message=rule["message"]
+                    )
+                    db.add(log)
 
         db.commit()
-
-        return alerts

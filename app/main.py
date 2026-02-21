@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from app.routes.compliance import router as compliance_router
+from app.routes.academic import router as academic_router
 
-app = FastAPI()
+app = FastAPI(title="ERP Backend")
 
-# Include routers AFTER app is created
-app.include_router(compliance_router)
-
+app.include_router(compliance_router, prefix="/compliance", tags=["Compliance"])
+app.include_router(academic_router, prefix="/academic", tags=["Academic"])
 
 @app.get("/")
 def root():
